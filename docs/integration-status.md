@@ -40,3 +40,7 @@ workspaces และ auth.users ยังมี 0 รายการ ขั้�
 ตรวจ health 200/live, recovery endpoint พร้อม bearer 200, worker ไม่มี secret 401, sessions ไม่ login 401; Telegram webhook ตรง URL หลัก pending=0 ไม่มี last_error; inbox 17 รายการ done Supabase pg_cron ตรวจงานค้างทุกนาทีและเรียกเฉพาะเมื่อมีงาน พร้อม retention รายวัน เก็บ URL/secret ใน Vault และ revoke private function จาก browser roles ทดลอง pg_net เรียก recovery ได้ HTTP 200
 
 ยังต้องให้ผู้ใช้ทดสอบส่งรูปใหม่ผ่านระบบออนไลน์ครบขั้นตอน และเพิ่ม Google authorized redirect URI https://datacctv.vercel.app/api/auth/google/callback เพื่อรองรับการเชื่อม Google ใหม่ (credential เดิมในฐานข้อมูลยังใช้ได้) ยังไม่ถือว่าผ่าน UAT ทั้งหมดหรือรองรับโหลดจำนวนมาก
+
+
+## เปิดทดสอบกลุ่ม — 30 กันยายน 2026
+รับคำสั่งจากผู้ดูแลเดิมใน Data Group (-1004416334604) ตรวจ getMe can_read_all_group_messages=true ลงทะเบียน allowed_chats enabled/groups_enabled=true และตั้ง TELEGRAM_GROUPS_ENABLED=true บน Vercel Production ต้องทดสอบรูปและ ForceReply ในกลุ่มจริงต่อ

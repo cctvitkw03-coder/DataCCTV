@@ -356,6 +356,7 @@ const groupMessage = (actor: number, extra: Record<string, unknown> = {}) => ({
   message_id: ++counter,
   chat: { id: -42, type: "supergroup" },
   message_thread_id: 10,
+  is_topic_message: true,
   from: { id: actor, username: `person${actor}` },
   ...extra,
 });
@@ -562,15 +563,13 @@ it("OAuth state is PKCE-bound, encrypted and consumed once; tokens never stored 
     )
   ).rows[0];
   expect(state.verifier_encrypted).toMatch(/^v1\./);
-  const spy = vi
-    .spyOn(OAuth2Client.prototype, "getToken")
-    .mockResolvedValue({
-      tokens: {
-        refresh_token: "test-refresh-value",
-        scope: "https://www.googleapis.com/auth/drive.file",
-      },
-      res: null,
-    } as never);
+  const spy = vi.spyOn(OAuth2Client.prototype, "getToken").mockResolvedValue({
+    tokens: {
+      refresh_token: "test-refresh-value",
+      scope: "https://www.googleapis.com/auth/drive.file",
+    },
+    res: null,
+  } as never);
   await expect(
     finishOAuth(started.state, "test-code", w, randomUUID()),
   ).rejects.toThrow("INVALID_OAUTH_STATE");
@@ -609,4 +608,38 @@ it("authenticated browser cannot read private OAuth tables or prompts", async ()
   } finally {
     await pg.exec("reset role");
   }
+});
+
+it("ordinary group reply thread IDs do not invalidate current menu callbacks", async () => {
+  await update({
+    message: groupMessage(104, {
+      is_topic_message: false,
+      message_thread_id: undefined,
+      photo: [
+        {
+          file_id: "ordinary",
+          file_unique_id: "ordinary",
+          width: 10,
+          height: 10,
+        },
+      ],
+    }),
+  });
+  const session = (
+    await pg.query<{ id: string }>(
+      "select id from upload_sessions where chat_id=-42 and thread_id=0 and actor_id=(select id from telegram_users where telegram_user_id=104)",
+    )
+  ).rows[0];
+  const cb = await groupCallback(104, session.id, "new");
+  cb.callback_query.message.is_topic_message = false;
+  cb.callback_query.message.message_thread_id = 777;
+  await update(cb);
+  expect(
+    (
+      await pg.query<{ step: string }>(
+        "select step from upload_sessions where id=$1",
+        [session.id],
+      )
+    ).rows[0].step,
+  ).toBe("new_folder");
 });

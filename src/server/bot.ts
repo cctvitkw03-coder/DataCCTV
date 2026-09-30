@@ -237,6 +237,8 @@ export async function handleUpdate(
     m = cb?.message || u.message || u.edited_message,
     actor = cb?.from || m?.from;
   if (!m) return;
+  // Reply threads in ordinary groups are not forum topics.
+  if (!m.is_topic_message) m.message_thread_id = undefined;
   const allowed = await c.query(
     "select groups_enabled from allowed_chats where bot_id=$1 and telegram_chat_id=$2 and enabled",
     [bot.id, String(m.chat.id)],

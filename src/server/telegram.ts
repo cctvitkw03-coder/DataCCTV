@@ -17,6 +17,7 @@ const image = z.object({
 const message = z.object({
   message_id: id,
   message_thread_id: id.optional(),
+  is_topic_message: z.boolean().optional(),
   chat: z.object({ id, type: z.string() }),
   from: user.optional(),
   sender_chat: z.unknown().optional(),
