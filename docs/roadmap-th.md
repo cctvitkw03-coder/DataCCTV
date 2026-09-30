@@ -212,3 +212,12 @@ workspaces และ auth.users ยังมี 0 รายการ ขั้�
 ## Google Drive พร้อมทดสอบ — 30 กันยายน 2026
 
 บัญชีผู้ดูแลเชื่อม OAuth สำเร็จ โฟลเดอร์เดิมที่สร้างเองตอบ 404 ภายใต้ drive.file ผู้ใช้จึงอนุญาตให้แอปสร้าง DataCCTV-App-Test แทน สร้างและอ่าน metadata กลับสำเร็จ ตรวจ canAddChildren=true และ workspace appProperties ตรงกัน ตั้งค่า root ในฐานข้อมูลและ .env.local แล้ว โฟลเดอร์เดิมคงอยู่ ยังไม่ได้ทดสอบอัปโหลดรูปหรือเปิด Telegram webhook
+
+
+## ออนไลน์แล้ว — 30 กันยายน 2026
+
+เผยแพร่ผ่าน GitHub cctvitkw03-coder/DataCCTV ไป Vercel cctv-it/datacctv; URL หลัก https://datacctv.vercel.app ใช้ APP_MODE=live และค่าลับอยู่ใน Vercel environment ฝั่ง server ผู้ใช้อนุญาตการส่งค่าลับโดยชัดเจน
+
+ตรวจ health 200/live, recovery endpoint พร้อม bearer 200, worker ไม่มี secret 401, sessions ไม่ login 401; Telegram webhook ตรง URL หลัก pending=0 ไม่มี last_error; inbox 17 รายการ done Supabase pg_cron ตรวจงานค้างทุกนาทีและเรียกเฉพาะเมื่อมีงาน พร้อม retention รายวัน เก็บ URL/secret ใน Vault และ revoke private function จาก browser roles ทดลอง pg_net เรียก recovery ได้ HTTP 200
+
+ยังต้องให้ผู้ใช้ทดสอบส่งรูปใหม่ผ่านระบบออนไลน์ครบขั้นตอน และเพิ่ม Google authorized redirect URI https://datacctv.vercel.app/api/auth/google/callback เพื่อรองรับการเชื่อม Google ใหม่ (credential เดิมในฐานข้อมูลยังใช้ได้) ยังไม่ถือว่าผ่าน UAT ทั้งหมดหรือรองรับโหลดจำนวนมาก

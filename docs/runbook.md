@@ -74,3 +74,7 @@ Health public บอกเพียง ok/mode Admin health แสดงจำ�
 ## ลำดับเอกสาร
 
 เอกสาร v2 เป็น source of truth; Roadmap ใช้ติดตามงานและสถานะเท่านั้น ค่าเริ่มต้น draft TTL ยังคง 24 ชั่วโมง (preview token 30 นาที) กลุ่มเป็น rollout หลัง UAT ไม่เปลี่ยนเป็น Group-first ตาม Roadmap เก่า ตรวจ `docs/roadmap-th.md` ฉบับปรับให้ตรง v2
+
+
+## Online recovery on Hobby
+Production origin: https://datacctv.vercel.app. Telegram webhook invokes runWorker through Next after; Supabase cron checks due work each minute and invokes authenticated recovery only when necessary. Daily retention runs at 02:17 UTC. Configure with node scripts/configure-recovery.mjs https://datacctv.vercel.app --apply. Secrets live in Vault, not cron SQL. Inspect cron.job / cron.job_run_details and net._http_response without exposing request headers. Disable only this app's timers with cron.unschedule('datacctv-recovery') and cron.unschedule('datacctv-retention'). No Vercel cron is required. Google callback allowlist must include the production origin before reconnecting OAuth.

@@ -31,3 +31,12 @@ workspaces และ auth.users ยังมี 0 รายการ ขั้�
 ผู้ใช้อนุญาต deploy และเปิด Telegram ออนไลน์แล้ว ตรวจ typecheck/lint/tests 44 รายการ/build ผ่าน, secret scan ผ่าน, production dependency audit พบ 0 vulnerabilities สร้าง secrets สำหรับ webhook/worker/cron เฉพาะ .env.local แล้ว ยังไม่เผยแพร่หรือเปลี่ยน webhook
 
 ข้อจำกัดที่พบ: GitHub CLI ใช้ npmoney2569-cmd มี READ เท่านั้นที่ cctvitkw03-coder/DataCCTV; Vercel credential ใช้ไม่ได้ต้อง login ใหม่; ผู้ใช้แจ้งแผน Hobby ซึ่ง cron ได้วันละครั้งและจำกัด personal non-commercial จึงต้องตัดสินใจ hosting/scheduler ก่อนเปิดใช้ต่อเนื่อง
+
+
+## ออนไลน์แล้ว — 30 กันยายน 2026
+
+เผยแพร่ผ่าน GitHub cctvitkw03-coder/DataCCTV ไป Vercel cctv-it/datacctv; URL หลัก https://datacctv.vercel.app ใช้ APP_MODE=live และค่าลับอยู่ใน Vercel environment ฝั่ง server ผู้ใช้อนุญาตการส่งค่าลับโดยชัดเจน
+
+ตรวจ health 200/live, recovery endpoint พร้อม bearer 200, worker ไม่มี secret 401, sessions ไม่ login 401; Telegram webhook ตรง URL หลัก pending=0 ไม่มี last_error; inbox 17 รายการ done Supabase pg_cron ตรวจงานค้างทุกนาทีและเรียกเฉพาะเมื่อมีงาน พร้อม retention รายวัน เก็บ URL/secret ใน Vault และ revoke private function จาก browser roles ทดลอง pg_net เรียก recovery ได้ HTTP 200
+
+ยังต้องให้ผู้ใช้ทดสอบส่งรูปใหม่ผ่านระบบออนไลน์ครบขั้นตอน และเพิ่ม Google authorized redirect URI https://datacctv.vercel.app/api/auth/google/callback เพื่อรองรับการเชื่อม Google ใหม่ (credential เดิมในฐานข้อมูลยังใช้ได้) ยังไม่ถือว่าผ่าน UAT ทั้งหมดหรือรองรับโหลดจำนวนมาก
