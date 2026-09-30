@@ -1,0 +1,197 @@
+@import "tailwindcss";
+:root {
+  --background: #f6f8fa;
+  --foreground: #172b36;
+  --radius: 0.75rem;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Tahoma, "Leelawadee UI", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+}
+button,
+a,
+input,
+select {
+  font: inherit;
+}
+button,
+a {
+  cursor: pointer;
+}
+button {
+  transition: background 0.15s;
+}
+input,
+select {
+  min-height: 42px;
+  border: 1px solid #dce3e8;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: white;
+  max-width: 100%;
+}
+input:focus,
+select:focus {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  color: #687c88;
+  background: #f8fafb;
+  letter-spacing: 0.02em;
+}
+th,
+td {
+  padding: 16px;
+  border-bottom: 1px solid #edf1f4;
+  white-space: nowrap;
+}
+td {
+  font-size: 13px;
+}
+dialog {
+  border: 0;
+  border-radius: 20px;
+  max-width: 720px;
+  width: calc(100% - 32px);
+  box-shadow: 0 30px 100px #0003;
+}
+dialog::backdrop {
+  background: #10273480;
+}
+.card {
+  background: white;
+  border: 1px solid #e4eaee;
+  border-radius: 16px;
+}
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 12px;
+  color: #6b7c86;
+  text-align: left;
+  background: transparent;
+}
+.nav-button.active {
+  background: #e3f2ed;
+  color: #146c60;
+  font-weight: 600;
+}
+.muted {
+  color: #758590;
+}
+.label {
+  font-size: 12px;
+  color: #6e7f8b;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 4px 9px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.badge:before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-completed {
+  background: #e8f6ef;
+  color: #228257;
+}
+.status-partial,
+.status-retry_wait {
+  background: #fff5df;
+  color: #a77717;
+}
+.status-queued,
+.status-uploading,
+.status-provisioning {
+  background: #eaf2ff;
+  color: #426bb6;
+}
+.status-failed {
+  background: #feeeee;
+  color: #c25454;
+}
+.status-stopped {
+  background: #eef1f3;
+  color: #667784;
+}
+::selection {
+  background: #bce7db;
+}
+@media (max-width: 900px) {
+  .sidebar {
+    display: none !important;
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .desktop-note {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .main-pad {
+    padding: 22px 16px !important;
+  }
+  .topbar {
+    padding: 16px !important;
+  }
+  .filter-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+  .filter-row input:first-child {
+    grid-column: span 2;
+  }
+  .stats-grid {
+    gap: 10px !important;
+  }
+}
+
+.mobile-nav {
+  display: none;
+}
+@media (max-width: 900px) {
+  .mobile-nav {
+    display: block;
+  }
+}
