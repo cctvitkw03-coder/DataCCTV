@@ -11,5 +11,8 @@
     "src/app/api/telegram/webhook/route.ts": {
       "maxDuration": 300
     }
-  }
+  },
+  "regions": [
+    "sin1"
+  ]
 }
