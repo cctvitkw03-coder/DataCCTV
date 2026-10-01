@@ -221,3 +221,8 @@ workspaces และ auth.users ยังมี 0 รายการ ขั้�
 ตรวจ health 200/live, recovery endpoint พร้อม bearer 200, worker ไม่มี secret 401, sessions ไม่ login 401; Telegram webhook ตรง URL หลัก pending=0 ไม่มี last_error; inbox 17 รายการ done Supabase pg_cron ตรวจงานค้างทุกนาทีและเรียกเฉพาะเมื่อมีงาน พร้อม retention รายวัน เก็บ URL/secret ใน Vault และ revoke private function จาก browser roles ทดลอง pg_net เรียก recovery ได้ HTTP 200
 
 ยังต้องให้ผู้ใช้ทดสอบส่งรูปใหม่ผ่านระบบออนไลน์ครบขั้นตอน และเพิ่ม Google authorized redirect URI https://datacctv.vercel.app/api/auth/google/callback เพื่อรองรับการเชื่อม Google ใหม่ (credential เดิมในฐานข้อมูลยังใช้ได้) ยังไม่ถือว่าผ่าน UAT ทั้งหมดหรือรองรับโหลดจำนวนมาก
+
+
+## ทดลองขั้นตอนสั้น — 1 ตุลาคม 2026
+
+ตามคำขอผู้ใช้ เก็บเวอร์ชันเดิมที่ tag before-quick-flow-2026-10-01 ก่อนทดลองจำโฟลเดอร์/ประเภท/ระบบรายคน ตั้งวันนี้ และรวมหน้าสรุปแก้ข้อมูล มีปุ่มใช้แบบเดิมและ BOT_FLOW_MODE=classic สำหรับย้อนกลับ งานค้างไม่เปลี่ยนโหมด สาขาต้องกรอกใหม่และยังยืนยันก่อนอัปโหลด รายละเอียดที่ docs/quick-flow-trial.md ข้อกำหนด V2 เดิมยังคงไว้

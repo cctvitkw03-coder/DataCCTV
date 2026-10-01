@@ -1,3 +1,4 @@
+import { mutateFlow, quickDraft } from "@/lib/quick-flow";
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
@@ -6,7 +7,6 @@ import {
   editable,
   fullDate,
   jobs,
-  mutate,
   snapshot,
   today,
   type Session,
@@ -89,7 +89,36 @@ export async function render(c: PoolClient, s: Session, page = 0, search = "") {
     )
   ).rows[0];
   let text = `ผู้ส่ง: ${sender?.username ? "@" + sender.username : sender?.telegram_user_id}\n📷 ชุด S-${s.session_no.padStart(6, "0")} · รับแล้ว ${fileRows.rowCount} รูป\n`;
-  if (s.state === "preview") {
+  if (s.draft.flow === "quick" && s.step === "review") {
+    const d = s.draft;
+    text += `📋 ตรวจรายละเอียดงาน\nโฟลเดอร์: ${d.folderName || d.pendingName || "ยังไม่ได้เลือก"}\nประเภท: ${d.job ? jobs[d.job] : "ยังไม่ได้เลือก"}\nระบบ: ${d.system || "ยังไม่ได้เลือก"}\nสาขา: ${d.branch || "กรอกใหม่สำหรับงานนี้"}\nอุปกรณ์: ${d.item || "—"}\nรายละเอียด: ${d.detail || "—"}\nวันที่: ${d.workDate ? fullDate(d.workDate) : "ยังไม่ได้เลือก"}\n`;
+    if (s.state === "preview") {
+      const snap = snapshot(s, fileRows.rows);
+      text += `\nโฟลเดอร์งาน: ${snap.folderName}\nยืนยันบันทึก ${snap.files.length} รูป`;
+      if (d.workDate! > today()) text += "\n⚠️ วันที่งานอยู่ในอนาคต";
+      rows.push([await button("✅ ยืนยันบันทึก", "confirm")]);
+    }
+    rows.push(
+      [
+        await button("แก้โฟลเดอร์", "edit_field", "folder"),
+        await button("แก้ประเภท", "edit_field", "job"),
+      ],
+      [
+        await button("แก้ระบบ", "edit_field", "system"),
+        await button(
+          d.branch ? "แก้สาขา" : "✏️ กรอกสาขา",
+          "edit_field",
+          "branch",
+        ),
+      ],
+      [
+        await button("แก้วันที่", "edit_field", "date"),
+        await button("แก้รายละเอียด", "edit_field", "detail"),
+      ],
+    );
+    if (d.job === "MOUSE_KEYBOARD")
+      rows.push([await button("เลือกอุปกรณ์", "edit_field", "item")]);
+  } else if (s.state === "preview") {
     const snap = snapshot(s, fileRows.rows);
     text += `📋 ตรวจสอบก่อนสร้าง\n${snap.path}\nวันที่งาน: ${fullDate(s.draft.workDate!)}\nรูปทั้งหมด: ${snap.files.length}\n${s.draft.pendingName ? "ชื่อใหม่: จะสร้างโครงสร้างทั้ง 2 ประเภท × 2 ระบบหลังยืนยัน" : ""}\n${s.draft.workDate! > today() ? "⚠️ วันที่งานอยู่ในอนาคต กรุณาตรวจสอบ" : ""}`;
     rows.push(
@@ -164,12 +193,25 @@ export async function render(c: PoolClient, s: Session, page = 0, search = "") {
   else if (s.step === "enter_branch") text += "พิมพ์รหัสหรือชื่อสาขา";
   else text += "กดส่งครบแล้วเพื่อตรวจสอบก่อนสร้าง";
   if (editable.includes(s.state)) {
-    if (!s.draft.closed) rows.push([await button("✅ ส่งครบแล้ว", "finish")]);
+    if (
+      !s.draft.closed ||
+      (s.draft.flow === "quick" && s.step === "review" && s.state !== "preview")
+    )
+      rows.push([
+        await button(
+          s.draft.flow === "quick"
+            ? "✅ ส่งครบแล้ว / ตรวจสอบ"
+            : "✅ ส่งครบแล้ว",
+          "finish",
+        ),
+      ]);
     rows.push([
       await button("◀️ ย้อนกลับ", "back"),
       await button("❌ ยกเลิก", "cancel"),
     ]);
   }
+  if (s.draft.flow === "quick")
+    rows.push([await button("ใช้แบบเดิม", "classic")]);
   await outbox(
     c,
     s.workspace_id,
@@ -445,7 +487,7 @@ export async function handleUpdate(
         if (!folder) throw new Error("INVALID_FOLDER");
         t.argument = `${folder.id}|${folder.display_name}`;
       }
-      const n = mutate(s, t.action, t.argument || undefined);
+      const n = mutateFlow(s, t.action, t.argument || undefined);
       if (n.state === "preview")
         snapshot(
           n,
@@ -560,6 +602,22 @@ export async function handleUpdate(
         )
       ).rows[0];
     const active = s!;
+    if (process.env.BOT_FLOW_MODE === "quick" && active.revision === 0) {
+      const last = (
+        await c.query(
+          "select snapshot->'draft' as draft from upload_sessions where workspace_id=$1 and actor_id=$2 and snapshot is not null order by confirmed_at desc limit 1",
+          [active.workspace_id, active.actor_id],
+        )
+      ).rows[0]?.draft;
+      const folder = (
+        await c.query(
+          "select f.id,f.display_name from user_preferences p join user_folders f on f.id=p.last_user_folder_id and f.workspace_id=p.workspace_id where p.workspace_id=$1 and p.telegram_user_pk=$2 and f.status not in ('missing','blocked')",
+          [active.workspace_id, active.actor_id],
+        )
+      ).rows[0];
+      active.draft = quickDraft(last, folder);
+      active.step = "review";
+    }
     if (
       late?.rowCount &&
       (
@@ -664,7 +722,7 @@ export async function handleUpdate(
       }
     }
     if (text === "/cancel") {
-      await save(c, mutate(s, "cancel"));
+      await save(c, mutateFlow(s, "cancel"));
       return;
     }
     if (s.step === "search_folder") {
@@ -682,7 +740,7 @@ export async function handleUpdate(
       } as Record<string, string>
     )[s.step];
     if (action) {
-      let n = mutate(s, action, text);
+      let n = mutateFlow(s, action, text);
       if (action === "name") {
         const match = (
           await c.query(
@@ -690,7 +748,8 @@ export async function handleUpdate(
             [s.workspace_id, clean(text, 80).toLocaleLowerCase("th")],
           )
         ).rows[0];
-        if (match) n = mutate(s, "folder", `${match.id}|${match.display_name}`);
+        if (match)
+          n = mutateFlow(s, "folder", `${match.id}|${match.display_name}`);
       }
       await save(c, n);
       await render(c, n);

@@ -30,6 +30,7 @@ export type Step =
   | "enter_date"
   | "review";
 export interface Draft {
+  flow?: "quick";
   folderId?: string;
   folderName?: string;
   pendingName?: string;

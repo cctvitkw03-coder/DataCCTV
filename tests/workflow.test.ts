@@ -675,3 +675,55 @@ it("one worker invocation sends the menu and ForceReply prompt together", async 
     ).rows,
   ).toHaveLength(0);
 });
+
+it("quick rollout applies only to new sessions and can return to classic without losing photos", async () => {
+  process.env.BOT_FLOW_MODE = "quick";
+  try {
+    await update({
+      message: groupMessage(105, {
+        photo: [
+          { file_id: "quick", file_unique_id: "quick", width: 10, height: 10 },
+        ],
+      }),
+    });
+    const read = async () =>
+      (
+        await c.query(
+          "select * from upload_sessions where actor_id=(select id from telegram_users where telegram_user_id=105)",
+        )
+      ).rows[0];
+    let s = await read();
+    expect(s.draft.flow).toBe("quick");
+    expect(s.step).toBe("review");
+    expect(s.draft.branch).toBeUndefined();
+    expect(s.draft.workDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    process.env.BOT_FLOW_MODE = "classic";
+    await update({
+      message: groupMessage(105, {
+        photo: [
+          {
+            file_id: "quick2",
+            file_unique_id: "quick2",
+            width: 10,
+            height: 10,
+          },
+        ],
+      }),
+    });
+    s = await read();
+    expect(s.draft.flow).toBe("quick");
+    await update(await groupCallback(105, s.id, "classic"));
+    s = await read();
+    expect(s.draft.flow).toBeUndefined();
+    expect(s.step).toBe("folder");
+    expect(
+      (
+        await pg.query("select * from session_files where session_id=$1", [
+          s.id,
+        ])
+      ).rows,
+    ).toHaveLength(2);
+  } finally {
+    delete process.env.BOT_FLOW_MODE;
+  }
+});
