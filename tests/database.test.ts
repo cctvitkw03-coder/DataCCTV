@@ -16,6 +16,7 @@ beforeAll(async () => {
   await pg.exec(
     readFileSync("supabase/migrations/002_groups_oauth.sql", "utf8"),
   );
+  await pg.exec(readFileSync("supabase/migrations/003_other_job.sql", "utf8"));
   await pg.query("insert into auth.users values($1)", [user]);
   await pg.query(
     "insert into workspaces(id,name,drive_root_folder_id) values($1,'one','root1'),($2,'two','root2')",

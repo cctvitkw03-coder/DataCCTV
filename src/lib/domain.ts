@@ -1,6 +1,7 @@
 export const jobs = {
   MOUSE_KEYBOARD: "รายการสาขาซื้อ เมาส์ + คีย์บอร์ด",
   UPS: "เครื่องสำรองไฟ",
+  OTHER: "อื่น",
 } as const;
 export type State =
   | "collecting"
@@ -140,9 +141,11 @@ export function folderName(d: Draft, no: string) {
   if (!d.workDate || !d.branch || !d.job) throw new Error("INCOMPLETE");
   const suffix = `${shortDate(d.workDate)} [S-${no.padStart(6, "0")}]`;
   const start =
-    d.job === "UPS"
-      ? `เครื่องสำรองไฟ สาขา ${d.branch} ${d.detail || ""}`
-      : `สาขา ${d.branch} - ${d.item || ""} ${d.detail || ""} ซื้อเมื่อ`;
+    d.job === "OTHER"
+      ? `อื่น สาขา ${d.branch} ${d.detail || ""}`
+      : d.job === "UPS"
+        ? `เครื่องสำรองไฟ สาขา ${d.branch} ${d.detail || ""}`
+        : `สาขา ${d.branch} - ${d.item || ""} ${d.detail || ""} ซื้อเมื่อ`;
   return `${clean(start, 1000).slice(0, 170 - suffix.length)} ${suffix}`;
 }
 export function snapshot(s: Session, files: Media[]): Snapshot {
@@ -155,6 +158,7 @@ export function snapshot(s: Session, files: Media[]): Snapshot {
     !d.branch ||
     !d.workDate ||
     (d.job === "MOUSE_KEYBOARD" && (!d.item || !d.detail)) ||
+    (d.job === "OTHER" && !d.detail) ||
     !files.length
   )
     throw new Error("INCOMPLETE");
@@ -210,7 +214,7 @@ export function mutate(s: Session, action: string, value?: string): Session {
       "job",
       "system",
       "branch",
-      ...(d.job === "UPS" ? [] : ["item" as Step]),
+      ...(d.job === "MOUSE_KEYBOARD" ? ["item" as Step] : []),
       "detail",
       "date",
       "review",
@@ -229,7 +233,7 @@ export function mutate(s: Session, action: string, value?: string): Session {
     delete d.folderName;
     n.step = "job";
   } else if (action === "job") {
-    if (value !== "UPS" && value !== "MOUSE_KEYBOARD")
+    if (value !== "UPS" && value !== "MOUSE_KEYBOARD" && value !== "OTHER")
       throw new Error("INVALID_JOB");
     d.job = value;
     delete d.item;
@@ -243,7 +247,7 @@ export function mutate(s: Session, action: string, value?: string): Session {
     if (value === "custom") n.step = "enter_branch";
     else {
       d.branch = clean(value!, 40);
-      n.step = d.job === "UPS" ? "detail" : "item";
+      n.step = d.job === "MOUSE_KEYBOARD" ? "item" : "detail";
     }
   } else if (action === "item") {
     d.item = clean(value!, 40);

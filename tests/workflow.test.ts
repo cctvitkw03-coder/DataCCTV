@@ -71,6 +71,7 @@ beforeAll(async () => {
   await pg.exec(
     readFileSync("supabase/migrations/002_groups_oauth.sql", "utf8"),
   );
+  await pg.exec(readFileSync("supabase/migrations/003_other_job.sql", "utf8"));
   await pg.query(
     "insert into workspaces(id,name,drive_root_folder_id) values($1,'sandbox','root')",
     [w],
@@ -260,7 +261,7 @@ class FakeDrive implements Drive {
   }
 }
 const drive = new FakeDrive();
-it("crash after Drive folder creation reconciles persisted work ID; provisions all four combinations", async () => {
+it("crash after Drive folder creation reconciles persisted work ID; provisions all six combinations", async () => {
   drive.crashOn = "folder";
   const j = await claim();
   expect(j).toBeDefined();
@@ -273,7 +274,7 @@ it("crash after Drive folder creation reconciles persisted work ID; provisions a
   expect(s.state).toBe("retry_wait");
   expect(s.work_folder_drive_id).toBeTruthy();
   expect(drive.resources.has(s.work_folder_drive_id)).toBe(true);
-  expect((await pg.query("select * from drive_nodes")).rows).toHaveLength(7);
+  expect((await pg.query("select * from drive_nodes")).rows).toHaveLength(10);
   await pg.exec("update jobs set run_after=now()");
   await processJob((await claim())!, drive);
   const after = (

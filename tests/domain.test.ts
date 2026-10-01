@@ -83,7 +83,7 @@ describe("work date and names", () => {
     expect(snapshot(base, files).folderName).not.toBe(
       snapshot({ ...base, session_no: "13" }, files).folderName,
     ));
-  it.each(["UPS", "MOUSE_KEYBOARD"] as const)(
+  it.each(["UPS", "MOUSE_KEYBOARD", "OTHER"] as const)(
     "both systems supported for %s",
     (job) => {
       for (const system of ["CCTV", "QUARK"] as const)
@@ -167,4 +167,19 @@ describe("media and retry", () => {
       retryPolicy(new RemoteError(403, 0, "rateLimitExceeded"), 1).retry,
     ).toBe(true);
   });
+});
+
+it("OTHER requires a description, skips item selection and names files as OTHER", () => {
+  let s = mutate({ ...base, state: "configuring" }, "job", "OTHER");
+  s = mutate(s, "system", "CCTV");
+  s = mutate(s, "branch", "123");
+  expect(s.step).toBe("detail");
+  expect(() =>
+    snapshot({ ...s, draft: { ...s.draft, detail: "", closed: true } }, files),
+  ).toThrow("INCOMPLETE");
+  s = mutate(s, "detail", "เปลี่ยนจอ");
+  s = mutate(s, "date", "2026-10-01");
+  const result = snapshot({ ...s, draft: { ...s.draft, closed: true } }, files);
+  expect(result.path).toContain("/ อื่น /");
+  expect(result.files[0].target_name).toContain("_OTHER_CCTV_");
 });

@@ -50,13 +50,18 @@ try {
   } else {
     if (mode === "migrate" && !process.argv.includes("--apply")) {
       console.log(
-        "Dry run: apply migrations 001_initial.sql and 002_groups_oauth.sql to a new sandbox. Back up and review conflicts first. No DB connection opened.",
+        "Dry run: apply migrations 001_initial.sql, 002_groups_oauth.sql and 003_other_job.sql to a new sandbox. Back up and review conflicts first. No DB connection opened.",
       );
       process.exit(0);
     }
     const pool = new Pool({
       connectionString: process.env.DIRECT_URL || process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: true, ...(process.env.DATABASE_SSL_CA ? {ca:process.env.DATABASE_SSL_CA.replace(/\\n/g,"\n")} : {}) },
+      ssl: {
+        rejectUnauthorized: true,
+        ...(process.env.DATABASE_SSL_CA
+          ? { ca: process.env.DATABASE_SSL_CA.replace(/\\n/g, "\n") }
+          : {}),
+      },
       max: 1,
       connectionTimeoutMillis: 10000,
     });
@@ -89,6 +94,9 @@ try {
         );
         await pool.query(
           fs.readFileSync("supabase/migrations/002_groups_oauth.sql", "utf8"),
+        );
+        await pool.query(
+          fs.readFileSync("supabase/migrations/003_other_job.sql", "utf8"),
         );
         console.log(
           "Initial migration applied. Configure sandbox workspace and membership separately.",

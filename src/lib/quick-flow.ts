@@ -28,6 +28,7 @@ export function missingStep(d: Draft): Step | undefined {
   if (!d.branch) return "enter_branch";
   if (d.job === "MOUSE_KEYBOARD" && !d.item) return "item";
   if (d.job === "MOUSE_KEYBOARD" && !d.detail) return "detail";
+  if (d.job === "OTHER" && !d.detail) return "detail";
   if (!d.workDate) return "date";
 }
 export function mutateFlow(

@@ -6,3 +6,5 @@
 -- insert into workspace_members values ('WORKSPACE_UUID','INVITED_AUTH_USER_UUID','admin');
 insert into public.job_types(workspace_id,code,label) select id,'UPS','เครื่องสำรองไฟ' from public.workspaces on conflict do nothing;
 insert into public.job_types(workspace_id,code,label) select id,'MOUSE_KEYBOARD','รายการสาขาซื้อ เมาส์ + คีย์บอร์ด' from public.workspaces on conflict do nothing;
+
+insert into public.job_types(workspace_id,code,label) select id,'OTHER','อื่น' from public.workspaces on conflict do nothing;

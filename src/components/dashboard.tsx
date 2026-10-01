@@ -510,13 +510,7 @@ export function Dashboard({
                             </div>
                           </td>
                           <td>
-                            <div>
-                              {r.draft.job === "UPS"
-                                ? "เครื่องสำรองไฟ"
-                                : r.draft.job
-                                  ? "เมาส์ + คีย์บอร์ด"
-                                  : "—"}
-                            </div>
+                            <div>{r.draft.job ? jobs[r.draft.job] : "—"}</div>
                             <span className="mt-1 inline-block rounded bg-slate-100 px-1.5 text-[10px] text-slate-500">
                               {r.draft.system || "—"}
                             </span>
@@ -616,7 +610,7 @@ export function Dashboard({
                       {isDemo ? "โฟลเดอร์จำลอง" : f.status}
                     </div>
                     <div className="mt-3 text-xs">
-                      เมาส์ + คีย์บอร์ด · UPS
+                      เมาส์ + คีย์บอร์ด · UPS · อื่น
                       <br />
                       CCTV · QUARK
                     </div>

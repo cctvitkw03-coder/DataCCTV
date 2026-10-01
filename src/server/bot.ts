@@ -120,7 +120,7 @@ export async function render(c: PoolClient, s: Session, page = 0, search = "") {
       rows.push([await button("เลือกอุปกรณ์", "edit_field", "item")]);
   } else if (s.state === "preview") {
     const snap = snapshot(s, fileRows.rows);
-    text += `📋 ตรวจสอบก่อนสร้าง\n${snap.path}\nวันที่งาน: ${fullDate(s.draft.workDate!)}\nรูปทั้งหมด: ${snap.files.length}\n${s.draft.pendingName ? "ชื่อใหม่: จะสร้างโครงสร้างทั้ง 2 ประเภท × 2 ระบบหลังยืนยัน" : ""}\n${s.draft.workDate! > today() ? "⚠️ วันที่งานอยู่ในอนาคต กรุณาตรวจสอบ" : ""}`;
+    text += `📋 ตรวจสอบก่อนสร้าง\n${snap.path}\nวันที่งาน: ${fullDate(s.draft.workDate!)}\nรูปทั้งหมด: ${snap.files.length}\n${s.draft.pendingName ? "ชื่อใหม่: จะสร้างโครงสร้างทั้ง 3 ประเภท × 2 ระบบหลังยืนยัน" : ""}\n${s.draft.workDate! > today() ? "⚠️ วันที่งานอยู่ในอนาคต กรุณาตรวจสอบ" : ""}`;
     rows.push(
       [await button("✅ สร้างโฟลเดอร์และอัปโหลด", "confirm")],
       [await button("✏️ แก้ไข", "edit")],
@@ -183,7 +183,10 @@ export async function render(c: PoolClient, s: Session, page = 0, search = "") {
       [await button("ระบุเอง", "date", "custom")],
     );
   } else if (s.step === "detail") {
-    text += "พิมพ์เครื่อง / จุดใช้งาน";
+    text +=
+      s.draft.job === "OTHER"
+        ? "พิมพ์รายละเอียดงานอื่น เช่น เปลี่ยนจอ / เดินสาย"
+        : "พิมพ์เครื่อง / จุดใช้งาน";
     if (s.draft.job === "UPS")
       rows.push([await button("ข้ามรายละเอียด", "detail")]);
   } else if (s.step === "new_folder")
