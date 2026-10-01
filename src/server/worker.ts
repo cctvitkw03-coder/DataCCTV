@@ -481,7 +481,7 @@ export async function processOutbox() {
     const r = await c.query(
       "select * from notification_outbox where status='queued' and run_after<=now() order by created_at for update skip locked limit 1",
     );
-    if (!r.rowCount) return;
+    if (!r.rowCount) return false;
     const row = r.rows[0];
     try {
       const { method, _input, ...body } = row.payload;
@@ -513,12 +513,15 @@ export async function processOutbox() {
         [row.id, p.retry ? "queued" : "dead", p.delaySeconds],
       );
     }
+    return true;
   });
 }
 export async function runWorker() {
   for (let i = 0; i < 3; i++) if (!(await processInbox())) break;
+  // Send menus and their ForceReply prompts in the same invocation, before uploads.
+  for (let i = 0; i < 10; i++) if (!(await processOutbox())) break;
   const j = await claim();
   if (j) await processJob(j);
-  await processOutbox();
+  for (let i = 0; i < 10; i++) if (!(await processOutbox())) break;
   return { processedJob: !!j };
 }

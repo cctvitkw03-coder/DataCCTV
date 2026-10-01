@@ -3,7 +3,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import type { PoolClient } from "pg";
 import { randomUUID, createHash } from "node:crypto";
-import { handleUpdate, tokenHash } from "@/server/bot";
+import { handleUpdate, tokenHash, render } from "@/server/bot";
 import { telegram } from "@/server/telegram";
 import { beginOAuth, finishOAuth } from "@/server/oauth";
 import { encrypt, decrypt } from "@/server/crypto";
@@ -44,7 +44,7 @@ vi.mock("@/server/telegram", async (original) => {
     telegram: vi.fn(async () => ({ message_id: 999 })),
   };
 });
-import { claim, processJob, processOutbox } from "@/server/worker";
+import { claim, processJob, processOutbox, runWorker } from "@/server/worker";
 const pg = new PGlite();
 const w = randomUUID(),
   b = randomUUID();
@@ -642,4 +642,36 @@ it("ordinary group reply thread IDs do not invalidate current menu callbacks", a
       )
     ).rows[0].step,
   ).toBe("new_folder");
+});
+
+it("one worker invocation sends the menu and ForceReply prompt together", async () => {
+  await pg.exec(
+    "update notification_outbox set status='done'; update jobs set status='done'",
+  );
+  const session = (
+    await pg.query<{ id: string }>(
+      "select id from upload_sessions where chat_id=-42 and thread_id=0 and actor_id=(select id from telegram_users where telegram_user_id=104)",
+    )
+  ).rows[0];
+  const fresh = (
+    await c.query<Parameters<typeof render>[1]>(
+      "update upload_sessions set revision=revision+1 where id=$1 returning *",
+      [session.id],
+    )
+  ).rows[0];
+  await render(c, fresh);
+  vi.mocked(telegram).mockClear();
+  await runWorker();
+  const sent = vi.mocked(telegram).mock.calls.map((call) => call[1]) as {
+    reply_markup?: { force_reply?: boolean };
+  }[];
+  expect(sent.some((body) => body.reply_markup?.force_reply)).toBe(true);
+  expect(
+    (
+      await pg.query(
+        "select id from notification_outbox where status='queued' and session_id=$1",
+        [session.id],
+      )
+    ).rows,
+  ).toHaveLength(0);
 });
